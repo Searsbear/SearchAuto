@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Search Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    <style>
+        :root { 
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #06b6d4;
+            --secondary: #2dd4bf;
+            --accent: #22d3ee; 
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+        }
+
+        body { 
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            background-color: var(--bg);
+            background-image: 
+                linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--text);
+            padding-bottom: 50px; 
+        }
+
+        .header { 
+            position: sticky; 
+            top: 0; 
+            background: linear-gradient(135deg, #083344, #115e59);
+            color: white; 
+            padding: 25px 15px; 
+            text-align: center; 
+            z-index: 100; 
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); 
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h2 { 
+            margin: 0; 
+            font-size: 1.6rem; 
+            font-weight: 900;
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+
+        .upload-container {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .upload-btn {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--primary);
+            border: 2px dashed var(--primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .upload-btn:hover {
+            background: var(--primary);
+            color: var(--bg);
+        }
+
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        #searchBox { 
+            width: 90%; 
+            max-width: 650px; 
+            padding: 15px 25px; 
+            border-radius: 12px; 
+            border: 2px solid rgba(6, 182, 212, 0.3); 
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--primary);
+            font-size: 1.1rem; 
+            outline: none; 
+            transition: all 0.3s ease;
+        }
+
+        #searchBox:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 90%;
+            max-width: 650px;
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            flex: 1;
+            min-width: 130px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--primary);
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-input:focus {
+            border-color: var(--secondary);
+        }
+
+        .chip-filter-container {
+            width: 90%;
+            max-width: 650px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        .chip-header { 
+            font-size: 0.75rem; 
+            color: var(--primary); 
+            text-transform: uppercase;
+            font-weight: 800; 
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .chip-list::-webkit-scrollbar { width: 6px; }
+        .chip-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .chip-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+        .filter-chip {
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            color: var(--muted);
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .filter-chip:hover { border-color: var(--primary); color: var(--text); }
+        .filter-chip.selected {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.3);
+        }
+
+        #stats { 
+            font-size: 0.75rem; 
+            margin-top: 15px; 
+            font-weight: 700; 
+            letter-spacing: 1.5px;
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--secondary);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 4px;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            text-transform: uppercase;
+        }
+
+        #actionBar {
+            margin-top: 15px;
+            display: none;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover { background: var(--primary); color: var(--bg); }
+
+        #results { padding: 20px; max-width: 950px; margin: auto; display: grid; gap: 25px; }
+
+        .card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(12px);
+            border-radius: 15px; 
+            overflow: hidden; 
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .org-header { 
+            background: rgba(6, 182, 212, 0.1);
+            padding: 20px; 
+            color: var(--primary); 
+            font-weight: 800; 
+            font-size: 1.3rem; 
+            border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .badge-container { display: flex; gap: 5px; flex-wrap: wrap; }
+        .badge { font-size: 0.65rem; font-weight: bold; padding: 4px 8px; border-radius: 12px; border: 1px solid; text-transform: uppercase; }
+        
+        .badge-cat { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-color: #60a5fa; }
+        .badge-age { background: rgba(45, 212, 191, 0.1); color: var(--secondary); border-color: var(--secondary); }
+        .badge-demo { background: rgba(217, 70, 239, 0.1); color: #d946ef; border-color: #d946ef; }
+        .badge-indig { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: #f59e0b; }
+        .badge-loc { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border-color: #94a3b8; }
+
+        .card-body { padding: 20px; font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; color: #cbd5e1; }
+        
+        .label { 
+            color: var(--secondary); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; 
+            display: inline-block; margin-top: 18px; background: rgba(45, 212, 191, 0.1);
+            padding: 3px 12px; border-radius: 4px; border-left: 3px solid var(--secondary);
+        }
+
+        mark { background: rgba(6, 182, 212, 0.4); color: #fff; padding: 0 2px; border-radius: 2px; }
+        a { color: var(--secondary); text-decoration: underline; transition: opacity 0.2s; }
+        a:hover { opacity: 0.8; color: var(--primary); }
+        .welcome { text-align: center; padding: 40px; color: var(--muted); }
+
+        #toggleSearchBtn {
+            margin-top: 15px; font-size: 0.85rem; padding: 10px 20px; border-radius: 8px;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        .dropdown-container {
+            max-height: 2000px; overflow: hidden; opacity: 1;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+        }
+
+        .dropdown-container.collapsed { max-height: 0; opacity: 0; margin-top: 0; pointer-events: none; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .header, .welcome, #actionBar, mark, .upload-container { background: transparent !important; box-shadow: none !important; color: black !important; }
+            .search-container, #actionBar, .welcome, #stats, #toggleSearchBtn, .upload-container { display: none !important; }
+            .card { border: 1px solid #ccc !important; page-break-inside: avoid; margin-bottom: 20px; background: white !important; }
+            .org-header { background: #eee !important; color: black !important; border-bottom: 1px solid #ccc; }
+            .label { border: none !important; background: transparent !important; color: black !important; font-weight: bold; }
+            a { color: black !important; text-decoration: none !important; }
+            .badge { border: 1px solid #333 !important; color: #333 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Resource Search</h2>
+
+        <div class="upload-container">
+            <label for="pdfUploader" class="upload-btn">📂 Upload PDF Database File(s)</label>
+            <input type="file" id="pdfUploader" multiple accept=".pdf" style="display: none;">
+        </div>
+
+        <button id="toggleSearchBtn" class="action-btn">
+            <span>🔍</span> Search & Filters
+        </button>
+
+        <div id="searchDropdown" class="dropdown-container">
+            <div class="search-container">
+                <input type="text" id="searchBox" placeholder='Search: "food" OR -"women and children"...' spellcheck="false">
+
+                <div class="filter-bar">
+                    <input type="number" id="minAge" class="filter-input" placeholder="Min Age">
+                    <input type="number" id="maxAge" class="filter-input" placeholder="Max Age">
+
+                    <select id="genderFilter" class="filter-input">
+                        <option value="any">Gender: Any</option>
+                        <option value="women">Serves Women</option>
+                        <option value="men">Serves Men</option>
+                        <option value="women-only">Women Only</option>
+                        <option value="men-only">Men Only</option>
+                    </select>
+
+                    <select id="popFilter" class="filter-input">
+                        <option value="any">Population: All</option>
+                        <option value="children">Families / Children</option>
+                        <option value="indigenous">Indigenous Services</option>
+                    </select>
+                </div>
+
+                <div class="chip-filter-container">
+                    <div class="chip-header">Filter by Category (Any selected)</div>
+                    <div id="categoryList" class="chip-list"></div>
+                </div>
+
+                <div class="chip-filter-container">
+                    <div class="chip-header">Filter by City / Borough (Any selected)</div>
+                    <div id="boroughList" class="chip-list"></div>
+                </div>
+
+            </div>
+
+            <div id="stats">Awaiting Files...</div>
+
+            <div id="actionBar">
+                <button class="action-btn" onclick="copyAllResults()">📋 Copy Full</button>
+                <button class="action-btn" onclick="downloadResults()">📥 Full TXT</button>
+                <button class="action-btn" onclick="downloadCompactResults()" style="border-color:var(--accent); color:var(--accent);">📇 Contacts TXT</button>
+                <button class="action-btn" onclick="window.print()">🖨️ Print PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="results">
+        <div class="welcome"><p>Please upload PDF database file(s) to automatically build the directory.</p></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. STATE & UI INITIALIZATION
+        // ==========================================
+        
+        let resources = [];
+        let currentFilteredList = [];
+        let selectedBoroughs = new Set();
+        let selectedCategories = new Set();
+        
+        let dynamicCategories = new Set();
+        let dynamicBoroughs = new Set();
+
+        function normalizeText(text) {
+            return text.toLowerCase()
+                       .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                       .replace(/[-–—']/g, " "); 
+        }
+
+        // ==========================================
+        // 2. DYNAMIC PDF FILE UPLOADER
+        // ==========================================
+        document.getElementById('pdfUploader').addEventListener('change', async function(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            resources = [];
+            selectedCategories.clear();
+            selectedBoroughs.clear();
+            dynamicCategories.clear();
+            dynamicBoroughs.clear();
+            
+            document.getElementById('categoryList').innerHTML = '';
+            document.getElementById('boroughList').innerHTML = '';
+            document.getElementById('stats').innerText = `PROCESSING FILE(S)...`;
+            document.getElementById('results').innerHTML = '<div class="welcome"><p>Reading PDFs & building dynamic filters. Please wait...</p></div>';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                document.getElementById('stats').innerText = `PARSING: ${i + 1}/${files.length} (${file.name})`;
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let fullText = "";
+                    for (let p = 1; p <= pdf.numPages; p++) {
+                        const page = await pdf.getPage(p);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join('\n') + "\n";
+                    }
+                    processRawText(fullText);
+                } catch (error) {
+                    console.error(`Failed to parse file: ${file.name}`, error);
+                }
+            }
+
+            Array.from(dynamicCategories).sort().forEach(cat => {
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.textContent = cat;
+                chip.onclick = () => {
+                    if (selectedCategories.has(cat)) {
+                        selectedCategories.delete(cat);
+                        chip.classList.remove('selected');
+                    } else {
+                        selectedCategories.add(cat);
+                        chip.classList.add('selected');
+                    }
+                    executeSearch();
+                };
+                document.getElementById('categoryList').appendChild(chip);
+            });
+
+            Array.from(dynamicBoroughs).sort().forEach(b => {
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.textContent = b;
+                chip.onclick = () => {
+                    if (selectedBoroughs.has(b)) {
+                        selectedBoroughs.delete(b);
+                        chip.classList.remove('selected');
+                    } else {
+                        selectedBoroughs.add(b);
+                        chip.classList.add('selected');
+                    }
+                    executeSearch();
+                };
+                document.getElementById('boroughList').appendChild(chip);
+            });
+
+            document.getElementById('searchDropdown').classList.remove('collapsed');
+            document.getElementById('stats').innerText = `DATABASE ONLINE | ${resources.length} RESOURCES`;
+            document.getElementById('results').innerHTML = '<div class="welcome"><p>Database Online. Ready to search.</p></div>';
+            executeSearch(); 
+        });
+
+        // ==========================================
+        // 3. THE AUTONOMOUS PARSER
+        // ==========================================
+        
+        function extractBorough(addressLine) {
+            if (!addressLine || addressLine.toLowerCase().includes("confidential")) return "Confidential";
+            
+            // Standardizes address parsing by breaking it into chunks split by commas
+            let parts = addressLine.split(',').map(p => p.trim());
+            
+            // Locate the provincial identifier (QC, Quebec, Québec)
+            let qcIndex = parts.findIndex(p => /^(QC|Québec|Quebec)$/i.test(p) || /QC\s+[A-Z]\d[A-Z]/i.test(p));
+            
+            if (qcIndex > 0) {
+                let preQc = parts[qcIndex - 1];
+                // If it says Montreal right before QC, the actual borough is likely the chunk before that
+                if (preQc.toLowerCase() === "montréal" || preQc.toLowerCase() === "montreal") {
+                    if (qcIndex > 1) {
+                        let borough = parts[qcIndex - 2];
+                        // Validate it doesn't have street numbers in it
+                        if (!/\d/.test(borough)) return borough;
+                    }
+                    return "Montréal (City)";
+                } else {
+                    // If it's a standalone city like "Dorval" or "Lachine"
+                    if (!/\d/.test(preQc)) return preQc;
+                }
+            }
+            
+            // Regex fallback if strict comma separation fails
+            const match = addressLine.match(/([^,]+),\s*(?:Montréal\s*,\s*)?(?:QC|Québec|Quebec)/i);
+            if (match && match[1] && !/\d/.test(match[1])) {
+                return match[1].trim();
+            }
+            
+            return "Unknown";
+        }
+
+        function processRawText(rawText) {
+            let cleanText = rawText.replace(/^\d+$/gm, "").replace(/[ \t]{2,}/g, ' ');
+            
+            // Safely slice the document using the Legal Status marker which appears reliably
+            let rawBlocks = cleanText.replace(/(Legal\s+status:[^\n]*)/gi, "$1\n|--SPLIT--|\n").split("|--SPLIT--|");
+            
+            let currentCategory = "General Resources"; 
+
+            rawBlocks.forEach(block => {
+                // Clear common header/footer artifacts
+                let cleanBlock = block.replace(/--- PAGE \d+ ---/g, "")
+                                      .replace(/^[ \t]*1000[ \t]*$/gm, "")
+                                      .replace(/^[ \t]*211[ \t]*$/gm, "")
+                                      .replace(/\/g, "")
+                                      .trim();
+
+                let lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length < 3) return;
+                
+                // Identify the line containing the address
+                let addressIndex = lines.findIndex(line => 
+                    (/(QC|Québec|Quebec)/i.test(line) && /\d/.test(line)) || 
+                    line.toLowerCase().includes("confidential address") ||
+                    (/[A-Z]\d[A-Z]\s*\d[A-Z]\d/.test(line))
+                );
+
+                if (addressIndex === -1) {
+                    addressIndex = lines.findIndex(line => {
+                        let l = line.toLowerCase();
+                        return /\d{3}[-\s]\d{4}/.test(l) || (/\d+/.test(l) && (l.includes("street") || l.includes("avenue") || l.includes("boulevard") || l.includes("road") || l.includes("rue ")));
+                    });
+                }
+
+                if (addressIndex <= 0) return;
+
+                // Backtrack exactly one line to grab the Organization Name
+                let startIndex = addressIndex - 1;
+                
+                // Keep absorbing upwards if it's a multi-line uppercase org title
+                while (startIndex > 0) {
+                    let prevLine = lines[startIndex - 1];
+                    let hasLowercase = /[a-z]/.test(prevLine);
+                    // Ensure we don't absorb a known category header into the organization name
+                    let isKnownCategory = dynamicCategories.has(prevLine.trim()) || prevLine.toLowerCase().includes("food");
+                    
+                    if (!hasLowercase && prevLine.trim().length > 0 && !isKnownCategory) {
+                        startIndex--;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Any lines before the Organization name are potential Categories/Headers
+                let potentialCats = lines.slice(0, startIndex).filter(l => 
+                    l.length > 3 && 
+                    !/^(\d+|211|Summary|Food|Alphabetical Index|Table of Contents|Food assistance)$/i.test(l) &&
+                    !l.toLowerCase().includes("page") &&
+                    !l.toLowerCase().includes("www.")
+                );
+                
+                if (potentialCats.length > 0) {
+                    let foundCat = potentialCats[potentialCats.length - 1];
+                    // Title-case it for UI cleanliness
+                    foundCat = foundCat.charAt(0).toUpperCase() + foundCat.slice(1).toLowerCase();
+                    currentCategory = foundCat;
+                }
+
+                let orgName = lines.slice(startIndex, addressIndex).join(' ');
+                let tailLines = lines.slice(addressIndex);
+                let finalLines = [orgName, ...tailLines];
+                
+                if (finalLines.length === 0) return;
+                
+                const rawBlock = finalLines.join('\n');
+                const phoneMatch = rawBlock.match(/\d{3}[-\s]?\d{3}-\d{4}/);
+                const fingerPrint = (orgName.substring(0, 30) + (phoneMatch ? phoneMatch[0] : "")).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                let orgBorough = extractBorough(lines[addressIndex]);
+                if (orgBorough.length > 40) orgBorough = "Unknown";
+
+                dynamicCategories.add(currentCategory);
+                if (orgBorough !== "Unknown" && orgBorough !== "Confidential") dynamicBoroughs.add(orgBorough);
+
+                let existingOrg = resources.find(r => r.fingerPrint === fingerPrint);
+
+                if (existingOrg) {
+                    if (!existingOrg.categories.includes(currentCategory)) existingOrg.categories.push(currentCategory);
+                    if (!existingOrg.boroughs.includes(orgBorough)) existingOrg.boroughs.push(orgBorough);
+                } else {
+                    let minAge = 0, maxAge = 120;
+                    const eligMatch = rawBlock.match(/Eligibility:([^\n]+)/i);
+                    const eligText = eligMatch ? eligMatch[1].toLowerCase() : "";
+
+                    if (eligMatch) {
+                        const rangeMatch = eligText.match(/(\d+)\s*(?:to|-)\s*(\d+)/);
+                        if (rangeMatch) { minAge = parseInt(rangeMatch[1]); maxAge = parseInt(rangeMatch[2]); }
+                        else {
+                            const overMatch = eligText.match(/(\d+)\s*(?:years|yrs)?\s*(?:and over|and up|\+)/i);
+                            if (overMatch) minAge = parseInt(overMatch[1]);
+                            else {
+                                const underMatch = eligText.match(/(?:under|<)\s*(\d+)/i);
+                                if (underMatch) maxAge = parseInt(underMatch[1]);
+                            }
+                        }
+                    }
+
+                    let servesWomen = true, servesMen = true, servesChildren = false, servesIndigenous = false;
+
+                    const mentionsWomen = /\b(women|mothers?|female|girls?|femmes?|mères?|filles?|pregnant|maternity|maternal)\b/.test(eligText);
+                    const mentionsMen = /\b(men|fathers?|male|boys?|hommes?|pères?|garçons?|paternal)\b/.test(eligText);
+
+                    if (mentionsWomen && !mentionsMen && !/\b(people|adults|everyone|anyone|public|families|parents|individuals)\b/.test(eligText)) servesMen = false; 
+                    if (mentionsMen && !mentionsWomen && !/\b(people|adults|everyone|anyone|public|families|parents|individuals)\b/.test(eligText)) servesWomen = false; 
+
+                    if (/\b(children|youth|family|families|parents?|enfants?|jeunes?|familles?|dads?|moms?|toddlers?|babies|baby|teens?|teenagers?|boys?|girls?)\b/.test(eligText) || minAge < 18 || maxAge <= 25) servesChildren = true;
+                    if (/\b(indigenous|aboriginal|first nations|inuit|métis|native|autochtones?)\b/i.test(rawBlock)) servesIndigenous = true;
+
+                    resources.push({
+                        fingerPrint,
+                        categories: [currentCategory],
+                        boroughs: [orgBorough],
+                        raw: rawBlock,
+                        contentLower: rawBlock.toLowerCase(),
+                        minAge, maxAge, servesWomen, servesMen, servesChildren, servesIndigenous
+                    });
+                }
+            });
+        }
+
+        // ==========================================
+        // 4. SEARCH & FILTER EXECUTION
+        // ==========================================
+
+        function parseTokens(str) {
+            const terms = { includes: [], excludes: [] };
+            let i = 0;
+            while (i < str.length) {
+                if (str[i] === ' ') { i++; continue; }
+                let isExclude = false;
+                if (str[i] === '-') { isExclude = true; i++; }
+
+                let term = "";
+                let isPhrase = false;
+                if (str[i] === '"') {
+                    isPhrase = true; i++;
+                    while (i < str.length && str[i] !== '"') { term += str[i]; i++; }
+                    i++; 
+                } else {
+                    while (i < str.length && str[i] !== ' ') { term += str[i]; i++; }
+                }
+
+                if (term && term.toLowerCase() !== 'or') {
+                    const pool = isExclude ? terms.excludes : terms.includes;
+                    pool.push({ text: term.toLowerCase(), isPhrase });
+                }
+            }
+            return terms;
+        }
+
+        function executeSearch() {
+            if (resources.length === 0) return; 
+
+            const query = document.getElementById('searchBox').value.trim();
+            const minInput = parseInt(document.getElementById('minAge').value);
+            const maxInput = parseInt(document.getElementById('maxAge').value);
+            const genderFilter = document.getElementById('genderFilter').value;
+            const popFilter = document.getElementById('popFilter').value;
+
+            const userMin = isNaN(minInput) ? 0 : minInput;
+            const userMax = isNaN(maxInput) ? 120 : maxInput;
+
+            if (query.length < 2 && isNaN(minInput) && isNaN(maxInput) && genderFilter === 'any' && popFilter === 'any' && selectedBoroughs.size === 0 && selectedCategories.size === 0) { 
+                document.getElementById('results').innerHTML = '<div class="welcome"><p>Ready to search.</p></div>'; 
+                document.getElementById('actionBar').style.display = 'none';
+                return; 
+            }
+
+            const orGroups = query ? query.split(/\s+OR\s+/i) : [];
+
+            currentFilteredList = resources.filter(res => {
+                if (userMin > res.maxAge || userMax < res.minAge) return false;
+
+                if (genderFilter === 'women' && !res.servesWomen) return false;
+                if (genderFilter === 'men' && !res.servesMen) return false;
+                if (genderFilter === 'women-only' && (!res.servesWomen || res.servesMen)) return false;
+                if (genderFilter === 'men-only' && (!res.servesMen || res.servesWomen)) return false;
+
+                if (popFilter === 'children' && !res.servesChildren) return false;
+                if (popFilter === 'indigenous' && !res.servesIndigenous) return false;
+
+                if (selectedCategories.size > 0) {
+                    if (!res.categories.some(c => selectedCategories.has(c))) return false;
+                }
+
+                if (selectedBoroughs.size > 0) {
+                    if (!res.boroughs.some(b => selectedBoroughs.has(b))) return false;
+                }
+
+                if (orGroups.length === 0) return true;
+                return orGroups.some(group => {
+                    const { includes, excludes } = parseTokens(group);
+                    const check = (t) => {
+                        const esc = t.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const reg = t.isPhrase ? new RegExp(esc, 'i') : new RegExp(`\\b${esc}\\b`, 'i');
+                        return reg.test(res.contentLower);
+                    };
+                    return includes.every(check) && !excludes.some(check);
+                });
+            });
+
+            document.getElementById('actionBar').style.display = currentFilteredList.length > 0 ? 'flex' : 'none';
+            document.getElementById('stats').innerText = `FOUND: ${currentFilteredList.length} MATCHES`;
+            render(currentFilteredList, query);
+        }
+
+        // ==========================================
+        // 5. RENDERING & FORMATTING
+        // ==========================================
+
+        function render(list, query) {
+            const resultsDiv = document.getElementById('results');
+            const tokens = parseTokens(query.replace(/\s+OR\s+/gi, " "));
+            const highlightTerms = tokens.includes.map(t => t.text);
+
+            if (list.length === 0) {
+                resultsDiv.innerHTML = '<div class="welcome">NO MATCHES FOUND.</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = list.slice(0, 100).map(item => {
+                const lines = item.raw.split('\n');
+                let body = lines.slice(1).join('\n');
+
+                body = body.replace(/(?<!EMAIL: )(?<!">)(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(\/[^\s\n]*)?/gi, (url) => `<a href="${url.startsWith('http')?url:'https://'+url}" target="_blank">${url}</a>`);
+                body = body.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi, `<a href="mailto:$1">$1</a>`);
+                body = body.replace(/(\d{3} \d{3}-\d{4})/g, `<a href="tel:$1" style="font-weight:bold">$1</a>`);
+
+                const labels = ["Services:", "Eligibility:", "Hours:", "Website:", "Email:", "Address:", "Coverage area:", "Fees:", "Financing:"];
+                labels.forEach(l => body = body.replace(new RegExp(`(${l})`, "g"), `<span class="label">$1</span>`));
+
+                highlightTerms.sort((a,b) => b.length - a.length).forEach(t => {
+                    if (t.length < 2) return;
+                    const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    
+                    const regex = new RegExp(`(<[^>]*>)|\\b(${esc})\\b`, "gi");
+                    body = body.replace(regex, (match, isTag, isTerm) => {
+                        if (isTag) return match;
+                        if (isTerm) return `<mark>${isTerm}</mark>`;
+                        return match;
+                    });
+                });
+
+                let badges = '';
+                item.categories.forEach(cat => badges += `<span class="badge badge-cat">${cat}</span>`);
+                
+                item.boroughs.forEach(b => {
+                    if(b !== "Unknown" && b !== "Confidential") badges += `<span class="badge badge-loc">📍 ${b}</span>`;
+                });
+
+                if (item.minAge > 0 || item.maxAge < 120) badges += `<span class="badge badge-age">${item.minAge}-${item.maxAge} YRS</span>`;
+                if (item.servesWomen && !item.servesMen) badges += `<span class="badge badge-demo">WOMEN ONLY</span>`;
+                if (item.servesMen && !item.servesWomen) badges += `<span class="badge badge-demo" style="color:var(--primary); border-color:var(--primary)">MEN ONLY</span>`;
+                if (item.servesChildren) badges += `<span class="badge badge-demo" style="color:white; border-color:white; background:rgba(255,255,255,0.1)">FAMILIES/YOUTH</span>`;
+                if (item.servesIndigenous) badges += `<span class="badge badge-indig">INDIGENOUS</span>`;
+
+                return `<div class="card">
+                    <div class="org-header">
+                        <span>${lines[0]}</span>
+                        <div class="badge-container">${badges}</div>
+                    </div>
+                    <div class="card-body">${body}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // ==========================================
+        // 6. LISTENERS & EXPORTS
+        // ==========================================
+
+        ['searchBox', 'minAge', 'maxAge', 'genderFilter', 'popFilter'].forEach(id => {
+            document.getElementById(id).addEventListener('input', executeSearch);
+        });
+
+        document.getElementById('toggleSearchBtn').addEventListener('click', function() {
+            document.getElementById('searchDropdown').classList.toggle('collapsed');
+        });
+
+        function getCleanText() { return currentFilteredList.map(item => `--------------------\n${item.raw.replace(/<[^>]*>/g, '')}\n`).join('\n'); }
+        function copyAllResults() { navigator.clipboard.writeText(getCleanText()).then(() => alert("Copied to clipboard.")); }
+        function downloadResults() {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([getCleanText()], { type: 'text/plain' })); 
+            a.download = "Resources.txt"; a.click();
+        }
+        function downloadCompactResults() {
+            const compact = currentFilteredList.map(item => `${item.raw.split('\n')[0].toUpperCase()}\n📞 ${item.raw.match(/\d{3} \d{3}-\d{4}/) || "N/A"}\n`).join('\n\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([compact], { type: 'text/plain' })); 
+            a.download = "Contacts.txt"; a.click();
+        }
+    </script>
+</body>
+</html>
