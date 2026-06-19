@@ -497,10 +497,11 @@
             let currentCategory = "General Resources"; 
 
             rawBlocks.forEach(block => {
+                // FIXED LINE: Changed /\/g to /\//g to prevent SyntaxError
                 let cleanBlock = block.replace(/--- PAGE \d+ ---/g, "")
                                       .replace(/^[ \t]*1000[ \t]*$/gm, "")
                                       .replace(/^[ \t]*211[ \t]*$/gm, "")
-                                      .replace(/\/g, "")
+                                      .replace(/\//g, "")
                                       .trim();
 
                 let lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
