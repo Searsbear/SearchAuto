@@ -465,29 +465,22 @@
         function extractBorough(addressLine) {
             if (!addressLine || addressLine.toLowerCase().includes("confidential")) return "Confidential";
             
-            // Standardizes address parsing by breaking it into chunks split by commas
             let parts = addressLine.split(',').map(p => p.trim());
-            
-            // Locate the provincial identifier (QC, Quebec, Québec)
             let qcIndex = parts.findIndex(p => /^(QC|Québec|Quebec)$/i.test(p) || /QC\s+[A-Z]\d[A-Z]/i.test(p));
             
             if (qcIndex > 0) {
                 let preQc = parts[qcIndex - 1];
-                // If it says Montreal right before QC, the actual borough is likely the chunk before that
                 if (preQc.toLowerCase() === "montréal" || preQc.toLowerCase() === "montreal") {
                     if (qcIndex > 1) {
                         let borough = parts[qcIndex - 2];
-                        // Validate it doesn't have street numbers in it
                         if (!/\d/.test(borough)) return borough;
                     }
                     return "Montréal (City)";
                 } else {
-                    // If it's a standalone city like "Dorval" or "Lachine"
                     if (!/\d/.test(preQc)) return preQc;
                 }
             }
             
-            // Regex fallback if strict comma separation fails
             const match = addressLine.match(/([^,]+),\s*(?:Montréal\s*,\s*)?(?:QC|Québec|Quebec)/i);
             if (match && match[1] && !/\d/.test(match[1])) {
                 return match[1].trim();
@@ -499,13 +492,11 @@
         function processRawText(rawText) {
             let cleanText = rawText.replace(/^\d+$/gm, "").replace(/[ \t]{2,}/g, ' ');
             
-            // Safely slice the document using the Legal Status marker which appears reliably
             let rawBlocks = cleanText.replace(/(Legal\s+status:[^\n]*)/gi, "$1\n|--SPLIT--|\n").split("|--SPLIT--|");
             
             let currentCategory = "General Resources"; 
 
             rawBlocks.forEach(block => {
-                // Clear common header/footer artifacts
                 let cleanBlock = block.replace(/--- PAGE \d+ ---/g, "")
                                       .replace(/^[ \t]*1000[ \t]*$/gm, "")
                                       .replace(/^[ \t]*211[ \t]*$/gm, "")
@@ -515,7 +506,6 @@
                 let lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 if (lines.length < 3) return;
                 
-                // Identify the line containing the address
                 let addressIndex = lines.findIndex(line => 
                     (/(QC|Québec|Quebec)/i.test(line) && /\d/.test(line)) || 
                     line.toLowerCase().includes("confidential address") ||
@@ -531,14 +521,11 @@
 
                 if (addressIndex <= 0) return;
 
-                // Backtrack exactly one line to grab the Organization Name
                 let startIndex = addressIndex - 1;
                 
-                // Keep absorbing upwards if it's a multi-line uppercase org title
                 while (startIndex > 0) {
                     let prevLine = lines[startIndex - 1];
                     let hasLowercase = /[a-z]/.test(prevLine);
-                    // Ensure we don't absorb a known category header into the organization name
                     let isKnownCategory = dynamicCategories.has(prevLine.trim()) || prevLine.toLowerCase().includes("food");
                     
                     if (!hasLowercase && prevLine.trim().length > 0 && !isKnownCategory) {
@@ -548,7 +535,6 @@
                     }
                 }
                 
-                // Any lines before the Organization name are potential Categories/Headers
                 let potentialCats = lines.slice(0, startIndex).filter(l => 
                     l.length > 3 && 
                     !/^(\d+|211|Summary|Food|Alphabetical Index|Table of Contents|Food assistance)$/i.test(l) &&
@@ -558,7 +544,6 @@
                 
                 if (potentialCats.length > 0) {
                     let foundCat = potentialCats[potentialCats.length - 1];
-                    // Title-case it for UI cleanliness
                     foundCat = foundCat.charAt(0).toUpperCase() + foundCat.slice(1).toLowerCase();
                     currentCategory = foundCat;
                 }
