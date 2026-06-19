@@ -88,7 +88,7 @@
 
         #searchBox { 
             width: 90%; 
-            max-width: 650px; 
+            max-width: 800px; 
             padding: 15px 25px; 
             border-radius: 12px; 
             border: 2px solid rgba(6, 182, 212, 0.3); 
@@ -109,13 +109,13 @@
             gap: 10px;
             justify-content: center;
             width: 90%;
-            max-width: 650px;
+            max-width: 800px;
             flex-wrap: wrap;
         }
 
         .filter-input {
             flex: 1;
-            min-width: 130px;
+            min-width: 140px;
             padding: 10px 12px;
             border-radius: 8px;
             border: 1px solid rgba(6, 182, 212, 0.3);
@@ -128,60 +128,6 @@
 
         .filter-input:focus {
             border-color: var(--secondary);
-        }
-
-        .chip-filter-container {
-            width: 90%;
-            max-width: 650px;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(6, 182, 212, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-
-        .chip-header { 
-            font-size: 0.75rem; 
-            color: var(--primary); 
-            text-transform: uppercase;
-            font-weight: 800; 
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-        }
-
-        .chip-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            max-height: 140px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .chip-list::-webkit-scrollbar { width: 6px; }
-        .chip-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        .chip-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
-
-        .filter-chip {
-            font-size: 0.7rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            color: var(--muted);
-            padding: 5px 10px;
-            border-radius: 15px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            font-weight: bold;
-        }
-
-        .filter-chip:hover { border-color: var(--primary); color: var(--text); }
-        .filter-chip.selected {
-            background: rgba(6, 182, 212, 0.2);
-            border-color: var(--primary);
-            color: var(--primary);
-            box-shadow: 0 0 8px rgba(6, 182, 212, 0.3);
         }
 
         #stats { 
@@ -256,6 +202,7 @@
         .badge { font-size: 0.65rem; font-weight: bold; padding: 4px 8px; border-radius: 12px; border: 1px solid; text-transform: uppercase; }
         
         .badge-cat { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-color: #60a5fa; }
+        .badge-sub { background: rgba(255, 255, 255, 0.05); color: #fff; border-color: #fff; }
         .badge-age { background: rgba(45, 212, 191, 0.1); color: var(--secondary); border-color: var(--secondary); }
         .badge-demo { background: rgba(217, 70, 239, 0.1); color: #d946ef; border-color: #d946ef; }
         .badge-indig { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: #f59e0b; }
@@ -314,13 +261,27 @@
 
         <div id="searchDropdown" class="dropdown-container">
             <div class="search-container">
-                <input type="text" id="searchBox" placeholder='Search: "food" OR -"women and children"...' spellcheck="false">
+                <input type="text" id="searchBox" placeholder='Search keywords, OR use syntax like "food" OR -"women and children"...' spellcheck="false">
 
                 <div class="filter-bar">
+                    <select id="mainCategory" class="filter-input" onchange="updateSubcategories(); executeSearch();">
+                        <option value="any">Main Category: All</option>
+                    </select>
+
+                    <select id="subCategory" class="filter-input" onchange="executeSearch();">
+                        <option value="any">Subcategory: All</option>
+                    </select>
+
+                    <select id="locationFilter" class="filter-input" onchange="executeSearch();">
+                        <option value="any">Location (City / MRC): All</option>
+                    </select>
+                </div>
+
+                <div class="filter-bar" style="margin-top: 5px;">
                     <input type="number" id="minAge" class="filter-input" placeholder="Min Age">
                     <input type="number" id="maxAge" class="filter-input" placeholder="Max Age">
 
-                    <select id="genderFilter" class="filter-input">
+                    <select id="genderFilter" class="filter-input" onchange="executeSearch();">
                         <option value="any">Gender: Any</option>
                         <option value="women">Serves Women</option>
                         <option value="men">Serves Men</option>
@@ -328,23 +289,12 @@
                         <option value="men-only">Men Only</option>
                     </select>
 
-                    <select id="popFilter" class="filter-input">
+                    <select id="popFilter" class="filter-input" onchange="executeSearch();">
                         <option value="any">Population: All</option>
                         <option value="children">Families / Children</option>
                         <option value="indigenous">Indigenous Services</option>
                     </select>
                 </div>
-
-                <div class="chip-filter-container">
-                    <div class="chip-header">Filter by Category (Any selected)</div>
-                    <div id="categoryList" class="chip-list"></div>
-                </div>
-
-                <div class="chip-filter-container">
-                    <div class="chip-header">Filter by City / Borough (Any selected)</div>
-                    <div id="boroughList" class="chip-list"></div>
-                </div>
-
             </div>
 
             <div id="stats">Awaiting Files...</div>
@@ -369,11 +319,8 @@
         
         let resources = [];
         let currentFilteredList = [];
-        let selectedBoroughs = new Set();
-        let selectedCategories = new Set();
-        
-        let dynamicCategories = new Set();
-        let dynamicBoroughs = new Set();
+        let categoryMap = {}; // Dynamically maps MainCategory -> Set of Subcategories
+        let dynamicLocations = new Set(); // Cities and MRCs
 
         function normalizeText(text) {
             return text.toLowerCase()
@@ -388,14 +335,11 @@
             const files = event.target.files;
             if (files.length === 0) return;
 
+            // Reset States
             resources = [];
-            selectedCategories.clear();
-            selectedBoroughs.clear();
-            dynamicCategories.clear();
-            dynamicBoroughs.clear();
+            categoryMap = {};
+            dynamicLocations.clear();
             
-            document.getElementById('categoryList').innerHTML = '';
-            document.getElementById('boroughList').innerHTML = '';
             document.getElementById('stats').innerText = `PROCESSING FILE(S)...`;
             document.getElementById('results').innerHTML = '<div class="welcome"><p>Reading PDFs & building dynamic filters. Please wait...</p></div>';
 
@@ -418,38 +362,24 @@
                 }
             }
 
-            Array.from(dynamicCategories).sort().forEach(cat => {
-                const chip = document.createElement('div');
-                chip.className = 'filter-chip';
-                chip.textContent = cat;
-                chip.onclick = () => {
-                    if (selectedCategories.has(cat)) {
-                        selectedCategories.delete(cat);
-                        chip.classList.remove('selected');
-                    } else {
-                        selectedCategories.add(cat);
-                        chip.classList.add('selected');
-                    }
-                    executeSearch();
-                };
-                document.getElementById('categoryList').appendChild(chip);
+            // Populate Main Category Dropdown
+            const mainCatSelect = document.getElementById('mainCategory');
+            mainCatSelect.innerHTML = '<option value="any">Main Category: All</option>';
+            Object.keys(categoryMap).sort().forEach(cat => {
+                let opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                mainCatSelect.appendChild(opt);
             });
 
-            Array.from(dynamicBoroughs).sort().forEach(b => {
-                const chip = document.createElement('div');
-                chip.className = 'filter-chip';
-                chip.textContent = b;
-                chip.onclick = () => {
-                    if (selectedBoroughs.has(b)) {
-                        selectedBoroughs.delete(b);
-                        chip.classList.remove('selected');
-                    } else {
-                        selectedBoroughs.add(b);
-                        chip.classList.add('selected');
-                    }
-                    executeSearch();
-                };
-                document.getElementById('boroughList').appendChild(chip);
+            // Populate Location Dropdown
+            const locSelect = document.getElementById('locationFilter');
+            locSelect.innerHTML = '<option value="any">Location (City / MRC): All</option>';
+            Array.from(dynamicLocations).sort().forEach(loc => {
+                let opt = document.createElement('option');
+                opt.value = loc;
+                opt.textContent = loc;
+                locSelect.appendChild(opt);
             });
 
             document.getElementById('searchDropdown').classList.remove('collapsed');
@@ -458,46 +388,62 @@
             executeSearch(); 
         });
 
+        // Function to update Subcategory dropdown when Main Category changes
+        function updateSubcategories() {
+            const mainCat = document.getElementById('mainCategory').value;
+            const subCatSelect = document.getElementById('subCategory');
+            
+            subCatSelect.innerHTML = '<option value="any">Subcategory: All</option>';
+            
+            if (mainCat !== "any" && categoryMap[mainCat]) {
+                let subs = Array.from(categoryMap[mainCat]).sort();
+                subs.forEach(sub => {
+                    if (sub === "General" && subs.length > 1) return; // Hide "General" if real subcats exist
+                    let opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.textContent = sub;
+                    subCatSelect.appendChild(opt);
+                });
+            }
+        }
+
         // ==========================================
         // 3. THE AUTONOMOUS PARSER
         // ==========================================
         
-        function extractBorough(addressLine) {
+        function extractLocationFromAddress(addressLine) {
             if (!addressLine || addressLine.toLowerCase().includes("confidential")) return "Confidential";
             
             let parts = addressLine.split(',').map(p => p.trim());
-            let qcIndex = parts.findIndex(p => /^(QC|Québec|Quebec)$/i.test(p) || /QC\s+[A-Z]\d[A-Z]/i.test(p));
+            let qcIndex = parts.findIndex(p => /^(QC|Québec|Quebec)$/i.test(p) || /^QC\s+[A-Z]\d[A-Z]/i.test(p));
             
-            if (qcIndex > 0) {
-                let preQc = parts[qcIndex - 1];
-                if (preQc.toLowerCase() === "montréal" || preQc.toLowerCase() === "montreal") {
-                    if (qcIndex > 1) {
-                        let borough = parts[qcIndex - 2];
-                        if (!/\d/.test(borough)) return borough;
-                    }
-                    return "Montréal (City)";
+            if (qcIndex >= 2) {
+                let cityOrBorough = parts[qcIndex - 2];
+                // Ensure we didn't accidentally grab a street address with digits
+                if (!/\d/.test(cityOrBorough)) {
+                    return cityOrBorough;
                 } else {
-                    if (!/\d/.test(preQc)) return preQc;
+                    return parts[qcIndex - 1]; // Fallback if suite caused an offset
                 }
+            } else if (qcIndex === 1) {
+                return parts[0].replace(/\d.*$/, '').trim();
             }
             
-            const match = addressLine.match(/([^,]+),\s*(?:Montréal\s*,\s*)?(?:QC|Québec|Quebec)/i);
+            const match = addressLine.match(/([^,]+),\s*(?:QC|Québec|Quebec)/i);
             if (match && match[1] && !/\d/.test(match[1])) {
                 return match[1].trim();
             }
-            
             return "Unknown";
         }
 
         function processRawText(rawText) {
             let cleanText = rawText.replace(/^\d+$/gm, "").replace(/[ \t]{2,}/g, ' ');
-            
             let rawBlocks = cleanText.replace(/(Legal\s+status:[^\n]*)/gi, "$1\n|--SPLIT--|\n").split("|--SPLIT--|");
             
-            let currentCategory = "General Resources"; 
+            let currentMainCategory = "General"; 
+            let currentSubCategory = "General";
 
             rawBlocks.forEach(block => {
-                // FIXED LINE: Changed /\/g to /\//g to prevent SyntaxError
                 let cleanBlock = block.replace(/--- PAGE \d+ ---/g, "")
                                       .replace(/^[ \t]*1000[ \t]*$/gm, "")
                                       .replace(/^[ \t]*211[ \t]*$/gm, "")
@@ -507,6 +453,7 @@
                 let lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 if (lines.length < 3) return;
                 
+                // Locate Address
                 let addressIndex = lines.findIndex(line => 
                     (/(QC|Québec|Quebec)/i.test(line) && /\d/.test(line)) || 
                     line.toLowerCase().includes("confidential address") ||
@@ -522,32 +469,48 @@
 
                 if (addressIndex <= 0) return;
 
+                // Move backward from Address to find Organization Name
                 let startIndex = addressIndex - 1;
-                
                 while (startIndex > 0) {
                     let prevLine = lines[startIndex - 1];
                     let hasLowercase = /[a-z]/.test(prevLine);
-                    let isKnownCategory = dynamicCategories.has(prevLine.trim()) || prevLine.toLowerCase().includes("food");
                     
-                    if (!hasLowercase && prevLine.trim().length > 0 && !isKnownCategory) {
+                    // Stop tracking upward if we hit the Category Headers (which contain lowercase text)
+                    if (!hasLowercase && prevLine.trim().length > 0) {
                         startIndex--;
                     } else {
                         break;
                     }
                 }
                 
+                // Lines above the Organization Name are potential Categories from the ToC headers
                 let potentialCats = lines.slice(0, startIndex).filter(l => 
-                    l.length > 3 && 
-                    !/^(\d+|211|Summary|Food|Alphabetical Index|Table of Contents|Food assistance)$/i.test(l) &&
+                    l.length > 3 && l.length < 60 &&
+                    !/^(\d+|211|Summary|Alphabetical Index|Table of Contents|Food assistance|Legal status:|Financing:|Fees:|Hours:|Coverage area:)$/i.test(l) &&
                     !l.toLowerCase().includes("page") &&
-                    !l.toLowerCase().includes("www.")
+                    !l.toLowerCase().includes("www.") &&
+                    !l.includes("---")
                 );
                 
-                if (potentialCats.length > 0) {
-                    let foundCat = potentialCats[potentialCats.length - 1];
-                    foundCat = foundCat.charAt(0).toUpperCase() + foundCat.slice(1).toLowerCase();
-                    currentCategory = foundCat;
+                if (potentialCats.length >= 2) {
+                    currentMainCategory = potentialCats[0].trim();
+                    currentSubCategory = potentialCats[potentialCats.length - 1].trim();
+                } else if (potentialCats.length === 1) {
+                    let cat = potentialCats[0].trim();
+                    // If it's a known Main Category, reset Subcategory. Otherwise it's a subcategory.
+                    if (categoryMap[cat]) { 
+                        currentMainCategory = cat;
+                        currentSubCategory = "General";
+                    } else {
+                        currentSubCategory = cat;
+                    }
                 }
+
+                // Initialize in Hierarchy Map
+                if (!categoryMap[currentMainCategory]) {
+                    categoryMap[currentMainCategory] = new Set();
+                }
+                categoryMap[currentMainCategory].add(currentSubCategory);
 
                 let orgName = lines.slice(startIndex, addressIndex).join(' ');
                 let tailLines = lines.slice(addressIndex);
@@ -559,18 +522,40 @@
                 const phoneMatch = rawBlock.match(/\d{3}[-\s]?\d{3}-\d{4}/);
                 const fingerPrint = (orgName.substring(0, 30) + (phoneMatch ? phoneMatch[0] : "")).toLowerCase().replace(/[^a-z0-9]/g, '');
 
-                let orgBorough = extractBorough(lines[addressIndex]);
-                if (orgBorough.length > 40) orgBorough = "Unknown";
+                // Geographic Extractor (MRCs + Address)
+                let orgLocations = new Set();
+                
+                // 1. Extract MRCs from "Coverage Area:" string
+                const coverageMatch = rawBlock.match(/Coverage area:\s*([^\n]+)/i);
+                if (coverageMatch) {
+                    coverageMatch[1].split(',').forEach(a => {
+                        let loc = a.trim();
+                        if(loc.length > 2) orgLocations.add(loc);
+                    });
+                }
 
-                dynamicCategories.add(currentCategory);
-                if (orgBorough !== "Unknown" && orgBorough !== "Confidential") dynamicBoroughs.add(orgBorough);
+                // 2. Extract City/Borough from Address string
+                let addressLocation = extractLocationFromAddress(lines[addressIndex]);
+                if (addressLocation && addressLocation !== "Unknown" && addressLocation !== "Confidential") {
+                    orgLocations.add(addressLocation);
+                }
 
+                if (orgLocations.size === 0) orgLocations.add("Unknown");
+
+                // Add locations to global tracking for dropdown
+                orgLocations.forEach(loc => {
+                    if (loc !== "Unknown" && loc !== "Confidential") dynamicLocations.add(loc);
+                });
+
+                // Cross-Reference Check
                 let existingOrg = resources.find(r => r.fingerPrint === fingerPrint);
 
                 if (existingOrg) {
-                    if (!existingOrg.categories.includes(currentCategory)) existingOrg.categories.push(currentCategory);
-                    if (!existingOrg.boroughs.includes(orgBorough)) existingOrg.boroughs.push(orgBorough);
+                    existingOrg.mainCategories.add(currentMainCategory);
+                    existingOrg.subCategories.add(currentSubCategory);
+                    orgLocations.forEach(loc => existingOrg.locations.add(loc));
                 } else {
+                    // Calculate Demographics
                     let minAge = 0, maxAge = 120;
                     const eligMatch = rawBlock.match(/Eligibility:([^\n]+)/i);
                     const eligText = eligMatch ? eligMatch[1].toLowerCase() : "";
@@ -601,8 +586,9 @@
 
                     resources.push({
                         fingerPrint,
-                        categories: [currentCategory],
-                        boroughs: [orgBorough],
+                        mainCategories: new Set([currentMainCategory]),
+                        subCategories: new Set([currentSubCategory]),
+                        locations: new Set(orgLocations),
                         raw: rawBlock,
                         contentLower: rawBlock.toLowerCase(),
                         minAge, maxAge, servesWomen, servesMen, servesChildren, servesIndigenous
@@ -649,11 +635,15 @@
             const maxInput = parseInt(document.getElementById('maxAge').value);
             const genderFilter = document.getElementById('genderFilter').value;
             const popFilter = document.getElementById('popFilter').value;
+            
+            const mainCatFilter = document.getElementById('mainCategory').value;
+            const subCatFilter = document.getElementById('subCategory').value;
+            const locFilter = document.getElementById('locationFilter').value;
 
             const userMin = isNaN(minInput) ? 0 : minInput;
             const userMax = isNaN(maxInput) ? 120 : maxInput;
 
-            if (query.length < 2 && isNaN(minInput) && isNaN(maxInput) && genderFilter === 'any' && popFilter === 'any' && selectedBoroughs.size === 0 && selectedCategories.size === 0) { 
+            if (query.length < 2 && isNaN(minInput) && isNaN(maxInput) && genderFilter === 'any' && popFilter === 'any' && mainCatFilter === 'any' && subCatFilter === 'any' && locFilter === 'any') { 
                 document.getElementById('results').innerHTML = '<div class="welcome"><p>Ready to search.</p></div>'; 
                 document.getElementById('actionBar').style.display = 'none';
                 return; 
@@ -662,24 +652,23 @@
             const orGroups = query ? query.split(/\s+OR\s+/i) : [];
 
             currentFilteredList = resources.filter(res => {
+                // Age Check
                 if (userMin > res.maxAge || userMax < res.minAge) return false;
 
+                // Demographics Check
                 if (genderFilter === 'women' && !res.servesWomen) return false;
                 if (genderFilter === 'men' && !res.servesMen) return false;
                 if (genderFilter === 'women-only' && (!res.servesWomen || res.servesMen)) return false;
                 if (genderFilter === 'men-only' && (!res.servesMen || res.servesWomen)) return false;
-
                 if (popFilter === 'children' && !res.servesChildren) return false;
                 if (popFilter === 'indigenous' && !res.servesIndigenous) return false;
 
-                if (selectedCategories.size > 0) {
-                    if (!res.categories.some(c => selectedCategories.has(c))) return false;
-                }
+                // Dropdown Checks
+                if (mainCatFilter !== 'any' && !res.mainCategories.has(mainCatFilter)) return false;
+                if (subCatFilter !== 'any' && !res.subCategories.has(subCatFilter)) return false;
+                if (locFilter !== 'any' && !res.locations.has(locFilter)) return false;
 
-                if (selectedBoroughs.size > 0) {
-                    if (!res.boroughs.some(b => selectedBoroughs.has(b))) return false;
-                }
-
+                // Keyword Check
                 if (orGroups.length === 0) return true;
                 return orGroups.some(group => {
                     const { includes, excludes } = parseTokens(group);
@@ -735,9 +724,14 @@
                 });
 
                 let badges = '';
-                item.categories.forEach(cat => badges += `<span class="badge badge-cat">${cat}</span>`);
-                
-                item.boroughs.forEach(b => {
+                item.mainCategories.forEach(cat => badges += `<span class="badge badge-cat">${cat}</span>`);
+                item.subCategories.forEach(sub => {
+                    if (sub !== "General" && !item.mainCategories.has(sub)) {
+                        badges += `<span class="badge badge-sub">${sub}</span>`;
+                    }
+                });
+
+                item.locations.forEach(b => {
                     if(b !== "Unknown" && b !== "Confidential") badges += `<span class="badge badge-loc">📍 ${b}</span>`;
                 });
 
@@ -761,7 +755,7 @@
         // 6. LISTENERS & EXPORTS
         // ==========================================
 
-        ['searchBox', 'minAge', 'maxAge', 'genderFilter', 'popFilter'].forEach(id => {
+        ['searchBox', 'minAge', 'maxAge'].forEach(id => {
             document.getElementById(id).addEventListener('input', executeSearch);
         });
 
