@@ -35,7 +35,6 @@
             overflow: hidden;
         }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
@@ -85,7 +84,7 @@
 
         /* --- SIDEBAR --- */
         .sidebar {
-            width: 320px;
+            width: 340px;
             background: rgba(15, 23, 42, 0.95);
             border-right: 1px solid var(--border);
             display: flex;
@@ -97,46 +96,82 @@
 
         .sidebar.hidden { display: none; }
 
+        .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .filter-header h3 { margin: 0; color: var(--primary); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .clear-btn { 
+            background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; 
+            padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; 
+            cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+        }
+        .clear-btn:hover { background: #ef4444; color: white; }
+
         .filter-section { margin-bottom: 25px; }
         .filter-section h3 {
             color: var(--secondary); font-size: 0.9rem; text-transform: uppercase;
-            margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid rgba(45, 212, 191, 0.2);
+            margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid rgba(45, 212, 191, 0.2);
             padding-bottom: 5px; letter-spacing: 1px;
         }
 
         .checkbox-list {
             display: flex; flex-direction: column; gap: 8px;
-            max-height: 220px; overflow-y: auto; padding-right: 5px;
+            max-height: 250px; overflow-y: auto; padding-right: 5px;
+        }
+
+        /* --- CATEGORY TREE --- */
+        .category-group { margin-bottom: 8px; }
+        
+        .main-cat-row { 
+            display: flex; align-items: center; gap: 6px; 
+            color: var(--primary); font-weight: 700; font-size: 0.9rem; 
+        }
+        
+        .main-cat-row span { cursor: pointer; transition: color 0.2s; user-select: none; }
+        .main-cat-row span:hover { color: var(--accent); }
+        
+        .toggle-icon { 
+            width: 16px; text-align: center; cursor: pointer; 
+            transition: transform 0.2s ease; font-size: 0.65rem; color: var(--muted);
+        }
+        .toggle-icon:hover { color: var(--text); }
+        .toggle-icon.open { transform: rotate(90deg); color: var(--secondary); }
+        
+        .subcat-list { 
+            display: none; flex-direction: column; gap: 6px; 
+            margin-top: 6px; padding-left: 24px; 
+            border-left: 1px solid rgba(6, 182, 212, 0.2); margin-left: 7px; 
+        }
+        .subcat-list.open { display: flex; animation: slideDown 0.2s ease-out; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .checkbox-label {
             font-size: 0.85rem; display: flex; align-items: flex-start; gap: 8px;
-            cursor: pointer; color: #cbd5e1; line-height: 1.4;
+            cursor: pointer; color: #cbd5e1; line-height: 1.4; user-select: none;
         }
         
-        .checkbox-label input { margin-top: 2px; cursor: pointer; accent-color: var(--primary); }
+        input[type="checkbox"] { margin-top: 2px; cursor: pointer; accent-color: var(--primary); }
         .checkbox-label:hover { color: var(--text); }
 
         .demographic-inputs { display: flex; flex-direction: column; gap: 10px; }
         .demographic-inputs .row { display: flex; gap: 10px; }
         
         .filter-input {
-            width: 100%; padding: 8px 10px; border-radius: 6px;
+            width: 100%; padding: 8px 10px; border-radius: 6px; box-sizing: border-box;
             border: 1px solid var(--border); background: rgba(15, 23, 42, 0.8);
             color: var(--primary); font-size: 0.85rem; outline: none;
         }
         .filter-input:focus { border-color: var(--secondary); }
 
         /* --- MAIN CONTENT --- */
-        .main-content {
-            flex: 1; display: flex; flex-direction: column;
-            padding: 20px; overflow-y: auto;
-        }
-
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+        
         .search-container {
             position: sticky; top: 0; z-index: 10;
-            background: var(--bg); padding-bottom: 15px; border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
+            background: var(--bg); padding-bottom: 15px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
         }
 
         #searchBox { 
@@ -213,25 +248,12 @@
             body { overflow: auto; height: auto; }
             .main-content { overflow-y: visible; }
         }
-
-        @media print {
-            body { background: white; color: black; display: block; height: auto; }
-            .header, .sidebar, .search-container, .welcome { display: none !important; }
-            .app-layout { display: block; }
-            .card { border: 1px solid #ccc !important; page-break-inside: avoid; margin-bottom: 20px; background: white !important; }
-            .org-header { background: #eee !important; color: black !important; border-bottom: 1px solid #ccc; }
-            .label { border: none !important; background: transparent !important; color: black !important; font-weight: bold; }
-            a { color: black !important; text-decoration: none !important; }
-            .badge { border: 1px solid #333 !important; color: #333 !important; }
-        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="header-title">
-            <h2>Resource Search</h2>
-        </div>
+        <div class="header-title"><h2>Resource Search</h2></div>
         <div class="upload-container">
             <label for="pdfUploader" class="upload-btn">📂 Upload PDFs</label>
             <input type="file" id="pdfUploader" multiple accept=".pdf" style="display: none;">
@@ -241,19 +263,19 @@
     <div class="app-layout">
         
         <div id="sidebar" class="sidebar hidden">
-            
-            <div class="filter-section">
-                <h3>Main Categories</h3>
-                <div id="catList" class="checkbox-list"></div>
+            <div class="filter-header">
+                <h3>Filters</h3>
+                <button class="clear-btn" onclick="clearFilters()">Clear All</button>
             </div>
 
             <div class="filter-section">
-                <h3>Subcategories</h3>
-                <div id="subCatList" class="checkbox-list"></div>
+                <h3>Categories & Subcategories</h3>
+                <div id="categoryTree" class="checkbox-list" style="max-height: 400px;"></div>
             </div>
 
             <div class="filter-section">
                 <h3>Location & Area</h3>
+                <input type="text" id="locSearch" class="filter-input" placeholder="Find a location..." onkeyup="filterLocationList()" style="margin-bottom: 10px;">
                 <div id="locList" class="checkbox-list"></div>
             </div>
 
@@ -300,21 +322,14 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
-        // ==========================================
-        // 1. STATE & UI INITIALIZATION
-        // ==========================================
         let resources = [];
         let currentFilteredList = [];
         let categoryMap = {}; 
         let dynamicLocations = new Set(); 
 
-        // ==========================================
-        // 2. DYNAMIC PDF FILE UPLOADER
-        // ==========================================
         document.getElementById('pdfUploader').addEventListener('change', async function(event) {
             const files = event.target.files;
             if (files.length === 0) return;
@@ -326,7 +341,7 @@
             document.getElementById('searchArea').style.display = 'block';
             document.getElementById('sidebar').classList.add('hidden');
             document.getElementById('stats').innerText = `PROCESSING FILE(S)...`;
-            document.getElementById('results').innerHTML = '<div class="welcome"><p>Reading PDFs & building dynamic filters. Please wait...</p></div>';
+            document.getElementById('results').innerHTML = '<div class="welcome"><p>Reading PDFs & building hierarchical filters. Please wait...</p></div>';
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
@@ -342,9 +357,7 @@
                         fullText += textContent.items.map(item => item.str).join('\n') + "\n";
                     }
                     processRawText(fullText);
-                } catch (error) {
-                    console.error(`Failed to parse file: ${file.name}`, error);
-                }
+                } catch (error) { console.error(`Failed to parse file: ${file.name}`, error); }
             }
 
             populateSidebar();
@@ -356,78 +369,153 @@
         });
 
         // ==========================================
-        // 3. SIDEBAR UI GENERATION
+        // UI TREE GENERATION & EVENT LOGIC
         // ==========================================
         function populateSidebar() {
-            const catList = document.getElementById('catList');
-            catList.innerHTML = '';
+            const catTree = document.getElementById('categoryTree');
+            catTree.innerHTML = '';
+
             Object.keys(categoryMap).sort().forEach(cat => {
-                catList.innerHTML += `<label class="checkbox-label"><input type="checkbox" value="${cat}" onchange="updateSubcatSidebar(); executeSearch();"> <span>${cat}</span></label>`;
+                const safeCatId = cat.replace(/[^a-zA-Z0-9]/g, '-');
+                // Escape quotes for injection safety
+                const safeVal = cat.replace(/"/g, '&quot;');
+                
+                const group = document.createElement('div');
+                group.className = 'category-group';
+
+                const mainRow = document.createElement('div');
+                mainRow.className = 'main-cat-row';
+                
+                const subList = document.createElement('div');
+                subList.className = 'subcat-list';
+                subList.id = `sublist-${safeCatId}`;
+
+                const subs = Array.from(categoryMap[cat]).filter(s => s !== "General").sort();
+                const hasSubs = subs.length > 0;
+
+                const icon = hasSubs ? `<div class="toggle-icon" onclick="toggleTree('${safeCatId}')">▶</div>` : `<div style="width:16px"></div>`;
+                
+                // Fixed: Utilizing data-val instead of standard value to prevent selector breaking
+                mainRow.innerHTML = `
+                    ${icon}
+                    <input type="checkbox" class="main-cat-cb" data-val="${safeVal}" onchange="handleMainCatChange(this)">
+                    <span onclick="toggleTree('${safeCatId}')">${cat}</span>
+                `;
+                group.appendChild(mainRow);
+
+                if (hasSubs) {
+                    subs.forEach(sub => {
+                        const safeSubVal = sub.replace(/"/g, '&quot;');
+                        const subLabel = document.createElement('label');
+                        subLabel.className = 'checkbox-label';
+                        subLabel.innerHTML = `
+                            <input type="checkbox" class="sub-cat-cb" data-val="${safeSubVal}" onchange="handleSubcatChange(this)"> 
+                            <span>${sub}</span>
+                        `;
+                        subList.appendChild(subLabel);
+                    });
+                    group.appendChild(subList);
+                }
+                catTree.appendChild(group);
             });
 
             const locList = document.getElementById('locList');
             locList.innerHTML = '';
             Array.from(dynamicLocations).sort().forEach(loc => {
-                locList.innerHTML += `<label class="checkbox-label"><input type="checkbox" value="${loc}" onchange="executeSearch();"> <span>${loc}</span></label>`;
+                const safeLoc = loc.replace(/"/g, '&quot;');
+                locList.innerHTML += `<label class="checkbox-label loc-cb-label"><input type="checkbox" class="loc-cb" data-val="${safeLoc}" onchange="executeSearch();"> <span>${loc}</span></label>`;
             });
-            
-            updateSubcatSidebar();
         }
 
-        function updateSubcatSidebar() {
-            const selectedCats = Array.from(document.querySelectorAll('#catList input:checked')).map(cb => cb.value);
-            const subCatList = document.getElementById('subCatList');
+        function toggleTree(safeCatId) {
+            const list = document.getElementById(`sublist-${safeCatId}`);
+            if (!list) return;
+            const icon = list.previousElementSibling.querySelector('.toggle-icon');
             
-            const currentlyChecked = new Set(Array.from(document.querySelectorAll('#subCatList input:checked')).map(cb => cb.value));
-            subCatList.innerHTML = '';
-            
-            let validSubs = new Set();
-            if (selectedCats.length === 0) {
-                Object.values(categoryMap).forEach(subs => subs.forEach(s => validSubs.add(s)));
+            if(list.classList.contains('open')) {
+                list.classList.remove('open');
+                icon.classList.remove('open');
             } else {
-                selectedCats.forEach(cat => {
-                    if (categoryMap[cat]) categoryMap[cat].forEach(s => validSubs.add(s));
-                });
+                list.classList.add('open');
+                icon.classList.add('open');
             }
+        }
 
-            Array.from(validSubs).sort().forEach(sub => {
-                if (sub === "General") return; 
-                const checkedStr = currentlyChecked.has(sub) ? "checked" : "";
-                subCatList.innerHTML += `<label class="checkbox-label"><input type="checkbox" value="${sub}" onchange="executeSearch();" ${checkedStr}> <span>${sub}</span></label>`;
+        // Fixed: Checks all children when parent is checked
+        function handleMainCatChange(checkbox) {
+            const group = checkbox.closest('.category-group');
+            const subs = group.querySelectorAll('.sub-cat-cb');
+            subs.forEach(sub => sub.checked = checkbox.checked);
+            executeSearch();
+        }
+
+        // Fixed: Resolves Indeterminate [-] states automatically using DOM Traversal
+        function handleSubcatChange(checkbox) {
+            const group = checkbox.closest('.category-group');
+            const parentCb = group.querySelector('.main-cat-cb');
+            const allSubs = group.querySelectorAll('.sub-cat-cb');
+            const checkedSubs = group.querySelectorAll('.sub-cat-cb:checked');
+            
+            if (checkedSubs.length === 0) {
+                parentCb.checked = false;
+                parentCb.indeterminate = false;
+            } else if (checkedSubs.length === allSubs.length) {
+                parentCb.checked = true;
+                parentCb.indeterminate = false;
+            } else {
+                parentCb.checked = false;
+                parentCb.indeterminate = true; // Sets the [-] visual state
+            }
+            executeSearch();
+        }
+
+        function filterLocationList() {
+            const term = document.getElementById('locSearch').value.toLowerCase();
+            document.querySelectorAll('.loc-cb-label').forEach(label => {
+                const text = label.innerText.toLowerCase();
+                label.style.display = text.includes(term) ? 'flex' : 'none';
             });
+        }
+
+        function clearFilters() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.indeterminate = false;
+            });
+            document.getElementById('searchBox').value = '';
+            document.getElementById('minAge').value = '';
+            document.getElementById('maxAge').value = '';
+            document.getElementById('genderFilter').value = 'any';
+            document.getElementById('popFilter').value = 'any';
+            document.getElementById('locSearch').value = '';
+            filterLocationList();
+            executeSearch();
         }
 
         // ==========================================
-        // 4. THE AUTONOMOUS PARSER & SANITIZER
+        // TEXT PARSER
         // ==========================================
         
+        // Fixed: Uses word boundaries \b to prevent falsely removing cities like Lachine or Rouyn-Noranda
         function sanitizeLocation(loc) {
             if (!loc) return null;
-            let s = loc.trim();
-            s = s.replace(/^[^\w\u00C0-\u017F]+|[^\w\u00C0-\u017F]+$/g, ''); 
-            
-            // Rejects locations containing digits (Postal codes, street numbers, PO boxes)
+            let s = loc.trim().replace(/^[^\w\u00C0-\u017F]+|[^\w\u00C0-\u017F]+$/g, ''); 
             if (/\d/.test(s)) return null; 
-            
-            // Rejects common street/address identifiers
-            const lower = s.toLowerCase();
-            const badWords = ['rue', 'boulevard', 'boul.', 'avenue', 'ch.', 'chemin', 'street', 'road', 'suite', 'app.', 'local', 'cp ', 'p.o. box', 'box ', 'qc', 'québec', 'quebec', 'confidential'];
-            
-            for (let bw of badWords) {
-                if (lower.includes(bw)) return null;
-            }
-            if (s.length < 3) return null;
-            return s;
+            const badPatterns = /\b(rue|boulevard|boul|avenue|ch|chemin|street|road|suite|app|local|cp|p\.o\. box|box|confidential)\b/i;
+            if (badPatterns.test(s)) return null;
+            if (/^(qc|québec|quebec)$/i.test(s)) return null; // Kills isolated province names
+            return s.length >= 3 ? s : null;
         }
 
         function extractLocationFromAddress(addressLine) {
             if (!addressLine) return null;
-            let match = addressLine.match(/([^,]+),\s*(QC|Québec|Quebec)\b/i);
-            if (match && match[1]) return match[1];
-            
             let parts = addressLine.split(',').map(p => p.trim());
             let qcIndex = parts.findIndex(p => /^(QC|Québec|Quebec)$/i.test(p) || /^QC\s+[A-Z]\d[A-Z]/i.test(p));
-            if (qcIndex > 0) return parts[qcIndex - 1];
+            if (qcIndex >= 2) return parts[qcIndex - 1]; // Standard format: ..., City, QC
+            if (qcIndex === 1) return parts[0]; 
+            
+            let match = addressLine.match(/([^,]+),\s*(QC|Québec|Quebec)\b/i);
+            if (match && match[1]) return match[1];
             return null;
         }
 
@@ -435,51 +523,27 @@
             let cleanText = rawText.replace(/^\d+$/gm, "").replace(/[ \t]{2,}/g, ' ');
             let rawBlocks = cleanText.replace(/(Legal\s+status:[^\n]*)/gi, "$1\n|--SPLIT--|\n").split("|--SPLIT--|");
             
-            let currentMainCategory = "General"; 
-            let currentSubCategory = "General";
+            let currentMainCategory = "General", currentSubCategory = "General";
 
             rawBlocks.forEach(block => {
-                let cleanBlock = block.replace(/--- PAGE \d+ ---/g, "")
-                                      .replace(/^[ \t]*1000[ \t]*$/gm, "")
-                                      .replace(/^[ \t]*211[ \t]*$/gm, "")
-                                      .replace(/\//g, "")
-                                      .trim();
-
+                let cleanBlock = block.replace(/--- PAGE \d+ ---/g, "").replace(/^[ \t]*1000[ \t]*$/gm, "").replace(/^[ \t]*211[ \t]*$/gm, "").replace(/\//g, "").trim();
                 let lines = cleanBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 if (lines.length < 3) return;
                 
-                let addressIndex = lines.findIndex(line => 
-                    (/(QC|Québec|Quebec)/i.test(line) && /\d/.test(line)) || 
-                    line.toLowerCase().includes("confidential address") ||
-                    (/[A-Z]\d[A-Z]\s*\d[A-Z]\d/.test(line))
-                );
-
-                if (addressIndex === -1) {
-                    addressIndex = lines.findIndex(line => {
-                        let l = line.toLowerCase();
-                        return /\d{3}[-\s]\d{4}/.test(l) || (/\d+/.test(l) && (l.includes("street") || l.includes("avenue") || l.includes("boulevard") || l.includes("road") || l.includes("rue ")));
-                    });
-                }
-
+                let addressIndex = lines.findIndex(line => (/(QC|Québec|Quebec)/i.test(line) && /\d/.test(line)) || line.toLowerCase().includes("confidential address") || (/[A-Z]\d[A-Z]\s*\d[A-Z]\d/.test(line)));
+                if (addressIndex === -1) addressIndex = lines.findIndex(line => { let l = line.toLowerCase(); return /\d{3}[-\s]\d{4}/.test(l) || (/\d+/.test(l) && (l.includes("street") || l.includes("avenue") || l.includes("boulevard") || l.includes("road") || l.includes("rue "))); });
                 if (addressIndex <= 0) return;
 
                 let startIndex = addressIndex - 1;
                 while (startIndex > 0) {
-                    let prevLine = lines[startIndex - 1];
-                    if (!/[a-z]/.test(prevLine) && prevLine.trim().length > 0) { startIndex--; } 
-                    else { break; }
+                    if (!/[a-z]/.test(lines[startIndex - 1]) && lines[startIndex - 1].trim().length > 0) startIndex--; 
+                    else break;
                 }
                 
-                let potentialCats = lines.slice(0, startIndex).filter(l => 
-                    l.length > 3 && l.length < 60 &&
-                    !/^(\d+|211|Summary|Alphabetical Index|Table of Contents|Food assistance|Legal status:|Financing:|Fees:|Hours:|Coverage area:)$/i.test(l) &&
-                    !l.toLowerCase().includes("page") && !l.toLowerCase().includes("www.") && !l.includes("---")
-                );
+                let potentialCats = lines.slice(0, startIndex).filter(l => l.length > 3 && l.length < 60 && !/^(\d+|211|Summary|Alphabetical Index|Table of Contents|Food assistance|Legal status:|Financing:|Fees:|Hours:|Coverage area:)$/i.test(l) && !l.toLowerCase().includes("page") && !l.toLowerCase().includes("www.") && !l.includes("---"));
                 
-                if (potentialCats.length >= 2) {
-                    currentMainCategory = potentialCats[0].trim();
-                    currentSubCategory = potentialCats[potentialCats.length - 1].trim();
-                } else if (potentialCats.length === 1) {
+                if (potentialCats.length >= 2) { currentMainCategory = potentialCats[0].trim(); currentSubCategory = potentialCats[potentialCats.length - 1].trim(); } 
+                else if (potentialCats.length === 1) {
                     let cat = potentialCats[0].trim();
                     if (categoryMap[cat]) { currentMainCategory = cat; currentSubCategory = "General"; } 
                     else { currentSubCategory = cat; }
@@ -496,29 +560,15 @@
                 const phoneMatch = rawBlock.match(/\d{3}[-\s]?\d{3}-\d{4}/);
                 const fingerPrint = (orgName.substring(0, 30) + (phoneMatch ? phoneMatch[0] : "")).toLowerCase().replace(/[^a-z0-9]/g, '');
 
-                // Robust Geographic Extractor
                 let orgLocations = new Set();
-                
                 const coverageMatch = rawBlock.match(/Coverage area:\s*([^\n]+)/i);
-                if (coverageMatch) {
-                    coverageMatch[1].split(/,| and | et |;/i).forEach(a => {
-                        let sanLoc = sanitizeLocation(a);
-                        if (sanLoc) orgLocations.add(sanLoc);
-                    });
-                }
-
-                let addressLocation = extractLocationFromAddress(lines[addressIndex]);
-                let sanAddr = sanitizeLocation(addressLocation);
+                if (coverageMatch) coverageMatch[1].split(/,| and | et |;/i).forEach(a => { let s = sanitizeLocation(a); if (s) orgLocations.add(s); });
+                let sanAddr = sanitizeLocation(extractLocationFromAddress(lines[addressIndex]));
                 if (sanAddr) orgLocations.add(sanAddr);
-
                 if (orgLocations.size === 0) orgLocations.add("Unknown");
-
-                orgLocations.forEach(loc => {
-                    if (loc !== "Unknown") dynamicLocations.add(loc);
-                });
+                orgLocations.forEach(loc => { if (loc !== "Unknown") dynamicLocations.add(loc); });
 
                 let existingOrg = resources.find(r => r.fingerPrint === fingerPrint);
-
                 if (existingOrg) {
                     existingOrg.mainCategories.add(currentMainCategory);
                     existingOrg.subCategories.add(currentSubCategory);
@@ -527,38 +577,27 @@
                     let minAge = 0, maxAge = 120;
                     const eligMatch = rawBlock.match(/Eligibility:([^\n]+)/i);
                     const eligText = eligMatch ? eligMatch[1].toLowerCase() : "";
-
                     if (eligMatch) {
                         const rangeMatch = eligText.match(/(\d+)\s*(?:to|-)\s*(\d+)/);
                         if (rangeMatch) { minAge = parseInt(rangeMatch[1]); maxAge = parseInt(rangeMatch[2]); }
                         else {
                             const overMatch = eligText.match(/(\d+)\s*(?:years|yrs)?\s*(?:and over|and up|\+)/i);
                             if (overMatch) minAge = parseInt(overMatch[1]);
-                            else {
-                                const underMatch = eligText.match(/(?:under|<)\s*(\d+)/i);
-                                if (underMatch) maxAge = parseInt(underMatch[1]);
-                            }
+                            else { const underMatch = eligText.match(/(?:under|<)\s*(\d+)/i); if (underMatch) maxAge = parseInt(underMatch[1]); }
                         }
                     }
 
                     let servesWomen = true, servesMen = true, servesChildren = false, servesIndigenous = false;
-
                     const mentionsWomen = /\b(women|mothers?|female|girls?|femmes?|mères?|filles?|pregnant|maternity|maternal)\b/.test(eligText);
                     const mentionsMen = /\b(men|fathers?|male|boys?|hommes?|pères?|garçons?|paternal)\b/.test(eligText);
-
                     if (mentionsWomen && !mentionsMen && !/\b(people|adults|everyone|anyone|public|families|parents|individuals)\b/.test(eligText)) servesMen = false; 
                     if (mentionsMen && !mentionsWomen && !/\b(people|adults|everyone|anyone|public|families|parents|individuals)\b/.test(eligText)) servesWomen = false; 
-
                     if (/\b(children|youth|family|families|parents?|enfants?|jeunes?|familles?|dads?|moms?|toddlers?|babies|baby|teens?|teenagers?|boys?|girls?)\b/.test(eligText) || minAge < 18 || maxAge <= 25) servesChildren = true;
                     if (/\b(indigenous|aboriginal|first nations|inuit|métis|native|autochtones?)\b/i.test(rawBlock)) servesIndigenous = true;
 
                     resources.push({
-                        fingerPrint,
-                        mainCategories: new Set([currentMainCategory]),
-                        subCategories: new Set([currentSubCategory]),
-                        locations: new Set(orgLocations),
-                        raw: rawBlock,
-                        contentLower: rawBlock.toLowerCase(),
+                        fingerPrint, mainCategories: new Set([currentMainCategory]), subCategories: new Set([currentSubCategory]),
+                        locations: new Set(orgLocations), raw: rawBlock, contentLower: rawBlock.toLowerCase(),
                         minAge, maxAge, servesWomen, servesMen, servesChildren, servesIndigenous
                     });
                 }
@@ -566,30 +605,20 @@
         }
 
         // ==========================================
-        // 5. SEARCH & FILTER EXECUTION
+        // SEARCH & FILTER EXECUTION
         // ==========================================
         function parseTokens(str) {
             const terms = { includes: [], excludes: [] };
             let i = 0;
             while (i < str.length) {
                 if (str[i] === ' ') { i++; continue; }
-                let isExclude = false;
-                if (str[i] === '-') { isExclude = true; i++; }
-
-                let term = "";
-                let isPhrase = false;
+                let isExclude = false; if (str[i] === '-') { isExclude = true; i++; }
+                let term = "", isPhrase = false;
                 if (str[i] === '"') {
                     isPhrase = true; i++;
-                    while (i < str.length && str[i] !== '"') { term += str[i]; i++; }
-                    i++; 
-                } else {
-                    while (i < str.length && str[i] !== ' ') { term += str[i]; i++; }
-                }
-
-                if (term && term.toLowerCase() !== 'or') {
-                    const pool = isExclude ? terms.excludes : terms.includes;
-                    pool.push({ text: term.toLowerCase(), isPhrase });
-                }
+                    while (i < str.length && str[i] !== '"') { term += str[i]; i++; } i++; 
+                } else { while (i < str.length && str[i] !== ' ') { term += str[i]; i++; } }
+                if (term && term.toLowerCase() !== 'or') (isExclude ? terms.excludes : terms.includes).push({ text: term.toLowerCase(), isPhrase });
             }
             return terms;
         }
@@ -603,15 +632,23 @@
             const genderFilter = document.getElementById('genderFilter').value;
             const popFilter = document.getElementById('popFilter').value;
             
-            const selectedCats = Array.from(document.querySelectorAll('#catList input:checked')).map(cb => cb.value);
-            const selectedSubs = Array.from(document.querySelectorAll('#subCatList input:checked')).map(cb => cb.value);
-            const selectedLocs = Array.from(document.querySelectorAll('#locList input:checked')).map(cb => cb.value);
+            // Build tree state map instead of flat array
+            const selectedCats = [];
+            document.querySelectorAll('.main-cat-cb').forEach(parentCb => {
+                if (parentCb.checked || parentCb.indeterminate) {
+                    selectedCats.push({
+                        cat: parentCb.dataset.val,
+                        isFullyChecked: parentCb.checked,
+                        checkedSubs: Array.from(parentCb.closest('.category-group').querySelectorAll('.sub-cat-cb:checked')).map(cb => cb.dataset.val)
+                    });
+                }
+            });
 
+            const selectedLocs = Array.from(document.querySelectorAll('.loc-cb:checked')).map(cb => cb.dataset.val);
             const orGroups = query ? query.split(/\s+OR\s+/i) : [];
 
             currentFilteredList = resources.filter(res => {
                 if (userMin > res.maxAge || userMax < res.minAge) return false;
-                
                 if (genderFilter === 'women' && !res.servesWomen) return false;
                 if (genderFilter === 'men' && !res.servesMen) return false;
                 if (genderFilter === 'women-only' && (!res.servesWomen || res.servesMen)) return false;
@@ -619,9 +656,21 @@
                 if (popFilter === 'children' && !res.servesChildren) return false;
                 if (popFilter === 'indigenous' && !res.servesIndigenous) return false;
 
-                // Multiple selections act as an OR condition within their respective groups
-                if (selectedCats.length > 0 && !selectedCats.some(cat => res.mainCategories.has(cat))) return false;
-                if (selectedSubs.length > 0 && !selectedSubs.some(sub => res.subCategories.has(sub))) return false;
+                // Tree View Logic Application
+                if (selectedCats.length > 0) {
+                    let matchesCategory = false;
+                    for (let parent of selectedCats) {
+                        if (res.mainCategories.has(parent.cat)) {
+                            // Automatically matches if the entire category is selected, OR if the specific sub is checked
+                            if (parent.isFullyChecked || parent.checkedSubs.some(sub => res.subCategories.has(sub))) {
+                                matchesCategory = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!matchesCategory) return false;
+                }
+
                 if (selectedLocs.length > 0 && !selectedLocs.some(loc => res.locations.has(loc))) return false;
 
                 if (orGroups.length === 0) return true;
@@ -642,7 +691,7 @@
         }
 
         // ==========================================
-        // 6. RENDERING & FORMATTING
+        // RENDERING
         // ==========================================
         function render(list, query) {
             const resultsDiv = document.getElementById('results');
@@ -650,13 +699,11 @@
             const highlightTerms = tokens.includes.map(t => t.text);
 
             if (list.length === 0) {
-                resultsDiv.innerHTML = '<div class="welcome">NO MATCHES FOUND.</div>';
-                return;
+                resultsDiv.innerHTML = '<div class="welcome">NO MATCHES FOUND.</div>'; return;
             }
 
             resultsDiv.innerHTML = list.slice(0, 100).map(item => {
-                const lines = item.raw.split('\n');
-                let body = lines.slice(1).join('\n');
+                const lines = item.raw.split('\n'); let body = lines.slice(1).join('\n');
 
                 body = body.replace(/(?<!EMAIL: )(?<!">)(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(\/[^\s\n]*)?/gi, (url) => `<a href="${url.startsWith('http')?url:'https://'+url}" target="_blank">${url}</a>`);
                 body = body.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi, `<a href="mailto:$1">$1</a>`);
@@ -668,22 +715,13 @@
                 highlightTerms.sort((a,b) => b.length - a.length).forEach(t => {
                     if (t.length < 2) return;
                     const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(`(<[^>]*>)|\\b(${esc})\\b`, "gi");
-                    body = body.replace(regex, (match, isTag, isTerm) => {
-                        if (isTag) return match;
-                        if (isTerm) return `<mark>${isTerm}</mark>`;
-                        return match;
-                    });
+                    body = body.replace(new RegExp(`(<[^>]*>)|\\b(${esc})\\b`, "gi"), (m, isTag, isTerm) => isTag ? m : (isTerm ? `<mark>${isTerm}</mark>` : m));
                 });
 
                 let badges = '';
                 item.mainCategories.forEach(cat => badges += `<span class="badge badge-cat">${cat}</span>`);
-                item.subCategories.forEach(sub => {
-                    if (sub !== "General" && !item.mainCategories.has(sub)) badges += `<span class="badge badge-sub">${sub}</span>`;
-                });
-                item.locations.forEach(b => {
-                    if(b !== "Unknown") badges += `<span class="badge badge-loc">📍 ${b}</span>`;
-                });
+                item.subCategories.forEach(sub => { if (sub !== "General" && !item.mainCategories.has(sub)) badges += `<span class="badge badge-sub">${sub}</span>`; });
+                item.locations.forEach(b => { if(b !== "Unknown") badges += `<span class="badge badge-loc">📍 ${b}</span>`; });
 
                 if (item.minAge > 0 || item.maxAge < 120) badges += `<span class="badge badge-age">${item.minAge}-${item.maxAge} YRS</span>`;
                 if (item.servesWomen && !item.servesMen) badges += `<span class="badge badge-demo">WOMEN ONLY</span>`;
@@ -691,30 +729,17 @@
                 if (item.servesChildren) badges += `<span class="badge badge-demo" style="color:white; border-color:white; background:rgba(255,255,255,0.1)">FAMILIES/YOUTH</span>`;
                 if (item.servesIndigenous) badges += `<span class="badge badge-indig">INDIGENOUS</span>`;
 
-                return `<div class="card">
-                    <div class="org-header">
-                        <span>${lines[0]}</span>
-                        <div class="badge-container">${badges}</div>
-                    </div>
-                    <div class="card-body">${body}</div>
-                </div>`;
+                return `<div class="card"><div class="org-header"><span>${lines[0]}</span><div class="badge-container">${badges}</div></div><div class="card-body">${body}</div></div>`;
             }).join('');
         }
 
-        ['searchBox', 'minAge', 'maxAge'].forEach(id => {
-            document.getElementById(id).addEventListener('input', executeSearch);
-        });
-
+        ['searchBox', 'minAge', 'maxAge'].forEach(id => document.getElementById(id).addEventListener('input', executeSearch));
         function getCleanText() { return currentFilteredList.map(item => `--------------------\n${item.raw.replace(/<[^>]*>/g, '')}\n`).join('\n'); }
         function copyAllResults() { navigator.clipboard.writeText(getCleanText()).then(() => alert("Copied to clipboard.")); }
-        function downloadResults() {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([getCleanText()], { type: 'text/plain' })); 
-            a.download = "Resources.txt"; a.click();
-        }
+        function downloadResults() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([getCleanText()], { type: 'text/plain' })); a.download = "Resources.txt"; a.click(); }
         function downloadCompactResults() {
             const compact = currentFilteredList.map(item => `${item.raw.split('\n')[0].toUpperCase()}\n📞 ${item.raw.match(/\d{3} \d{3}-\d{4}/) || "N/A"}\n`).join('\n\n');
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([compact], { type: 'text/plain' })); 
-            a.download = "Contacts.txt"; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([compact], { type: 'text/plain' })); a.download = "Contacts.txt"; a.click();
         }
     </script>
 </body>
